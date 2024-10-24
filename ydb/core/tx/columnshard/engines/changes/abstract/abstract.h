@@ -167,15 +167,26 @@ public:
     }
 };
 
-class TConstructionContext: TNonCopyable {
+class TMergerContext: TNonCopyable {
+public:
+    const NColumnShard::TIndexationCounters Counters;
+
+    TMergerContext(
+        const NColumnShard::TIndexationCounters& counters)
+        : Counters(counters) {
+    }
+};
+
+class TConstructionContext: public TMergerContext {
+private:
+    using TBase = TMergerContext;
 public:
     const TVersionedIndex& SchemaVersions;
-    const NColumnShard::TIndexationCounters Counters;
     const NOlap::TSnapshot LastCommittedTx;
 
     TConstructionContext(const TVersionedIndex& schemaVersions, const NColumnShard::TIndexationCounters& counters, const NOlap::TSnapshot& lastCommittedTx)
-        : SchemaVersions(schemaVersions)
-        , Counters(counters)
+        : TBase(counters)
+        , SchemaVersions(schemaVersions)
         , LastCommittedTx(lastCommittedTx)
     {
 

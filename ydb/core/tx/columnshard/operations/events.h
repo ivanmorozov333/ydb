@@ -28,27 +28,25 @@ public:
 
 class TInsertedPortions {
 private:
-    NEvWrite::TWriteMeta WriteMeta;
+    YDB_READONLY_DEF(std::vector<NEvWrite::TWriteMeta>, WriteMeta);
     YDB_ACCESSOR_DEF(std::vector<TInsertedPortion>, Portions);
     YDB_READONLY(ui64, DataSize, 0);
     YDB_READONLY_DEF(std::vector<NOlap::TInsertWriteId>, InsertWriteIds);
 
 public:
-    const NEvWrite::TWriteMeta& GetWriteMeta() const {
-        return WriteMeta;
-    }
-
     void AddInsertWriteId(const NOlap::TInsertWriteId id) {
         InsertWriteIds.emplace_back(id);
     }
 
     void Finalize(TColumnShard* shard, NTabletFlatExecutor::TTransactionContext& txc);
 
-    TInsertedPortions(const NEvWrite::TWriteMeta& writeMeta, std::vector<TInsertedPortion>&& portions, const ui64 dataSize)
-        : WriteMeta(writeMeta)
+    TInsertedPortions(std::vector<NEvWrite::TWriteMeta>&& writeMeta, std::vector<TInsertedPortion>&& portions, const ui64 dataSize)
+        : WriteMeta(std::move(writeMeta))
         , Portions(std::move(portions))
         , DataSize(dataSize) {
-        AFL_VERIFY(!WriteMeta.HasLongTxId());
+        for (auto&& i : WriteMeta) {
+            AFL_VERIFY(!i.HasLongTxId());
+        }
         for (auto&& i : Portions) {
             AFL_VERIFY(i.GetPKBatch());
         }

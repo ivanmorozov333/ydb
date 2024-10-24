@@ -339,4 +339,17 @@ TConclusion<TWritePortionInfoWithBlobsResult> ISnapshotSchema::PrepareForWrite(c
     return TWritePortionInfoWithBlobsResult(std::move(constructor));
 }
 
+std::shared_ptr<NKikimr::NOlap::ISnapshotSchema> ISnapshotSchema::GetFilteredCommon(
+    std::vector<std::shared_ptr<arrow::Schema>>& schemas, const std::shared_ptr<ISnapshotSchema>& selfPtr) const {
+    std::set<ui32> fieldIds;
+    for (auto&& i : schemas) {
+        for (auto&& f : i->fields()) {
+            if (auto id = GetColumnIdOptional(f->name())) {
+                fieldIds.emplace(*id);
+            }
+        }
+    }
+    return std::make_shared<TFilteredSnapshotSchema>(selfPtr, fieldIds);
+}
+
 }   // namespace NKikimr::NOlap

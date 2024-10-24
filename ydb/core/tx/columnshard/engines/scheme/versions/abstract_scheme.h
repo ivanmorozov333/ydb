@@ -39,6 +39,8 @@ public:
         return GetColumnSaver(TString(columnName.data(), columnName.size()));
     }
 
+    std::shared_ptr<ISnapshotSchema> GetFilteredCommon(std::vector<std::shared_ptr<arrow::Schema>>& schemas, const std::shared_ptr<ISnapshotSchema>& selfPtr) const;
+
     std::vector<std::shared_ptr<arrow::Field>> GetAbsentFields(const std::shared_ptr<arrow::Schema>& existsSchema) const;
 
     std::shared_ptr<arrow::Scalar> GetExternalDefaultValueVerified(const std::string& columnName) const;

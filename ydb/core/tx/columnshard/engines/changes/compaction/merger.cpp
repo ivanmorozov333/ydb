@@ -25,6 +25,11 @@ std::vector<TWritePortionInfoWithBlobsResult> TMerger::Execute(const std::shared
         if (resultFiltered->HasColumnId((ui32)IIndexInfo::ESpecialColumn::DELETE_FLAG)) {
             IIndexInfo::AddDeleteFields(indexFields);
         }
+        if (InsertionMode) {
+            for (auto&& i : resultFiltered->GetIndexInfo().GetReplaceKey()->fields()) {
+                indexFields.emplace_back(i);
+            }
+        }
         IIndexInfo::AddSnapshotFields(indexFields);
         auto dataSchema = std::make_shared<arrow::Schema>(indexFields);
         NArrow::NMerger::TMergePartialStream mergeStream(
@@ -158,11 +163,17 @@ std::vector<TWritePortionInfoWithBlobsResult> TMerger::Execute(const std::shared
                 SaverContext.GetStoragesManager());
 
             NArrow::TFirstLastSpecialKeys primaryKeys(slice.GetFirstLastPKBatch(resultFiltered->GetIndexInfo().GetReplaceKey()));
-            NArrow::TMinMaxSpecialKeys snapshotKeys(b, TIndexInfo::ArrowSchemaSnapshot());
+            std::optional<NArrow::TMinMaxSpecialKeys> snapshotKeys;
+            if (InsertionMode) {
+                snapshotKeys = NArrow::TMinMaxSpecialKeys(b, TIndexInfo::ArrowSchemaSnapshot());
+            }
             constructor.GetPortionConstructor().AddMetadata(*resultFiltered, deletionsCount, primaryKeys, snapshotKeys);
             constructor.GetPortionConstructor().MutableMeta().SetTierName(IStoragesManager::DefaultStorageId);
             if (shardingActualVersion) {
                 constructor.GetPortionConstructor().SetShardingVersion(*shardingActualVersion);
+            }
+            if (InsertMode) {
+                PKIntervals.emplace_back(b);
             }
             result.emplace_back(std::move(constructor));
             recordIdx += slice.GetRecordsCount();

@@ -41,9 +41,13 @@ TConclusionStatus TBuildBatchesTask::DoExecute(const std::shared_ptr<ITask>& /*t
         case NEvWrite::EModificationType::Upsert: {
             const std::vector<std::shared_ptr<arrow::Field>> defaultFields = Context.GetActualSchema()->GetAbsentFields(batch->schema());
             if (defaultFields.empty()) {
-                std::shared_ptr<NConveyor::ITask> task =
-                    std::make_shared<NOlap::TBuildSlicesTask>(BufferActorId, std::move(WriteData), batch, Context);
-                NConveyor::TInsertServiceOperator::AsyncTaskToExecute(task);
+                if (AppDataVerified().ColumnShardConfig.GetWritingBufferDurationSeconds()) {
+                    NActors::TActorContext::AsActorContext().Send(
+                        BufferActorId, std::make_unique<TEvAddInsertedDataToBuffer>(std::move(WriteData), batch, Context));
+                } else {
+                    auto task = std::make_shared<NOlap::TBuildSlicesTask>(BufferActorId, std::move(WriteData), batch, Context);
+                    NConveyor::TInsertServiceOperator::AsyncTaskToExecute(task);
+                }
                 return TConclusionStatus::Success();
             } else {
                 auto insertionConclusion = Context.GetActualSchema()->CheckColumnsDefault(defaultFields);
@@ -68,9 +72,13 @@ TConclusionStatus TBuildBatchesTask::DoExecute(const std::shared_ptr<ITask>& /*t
         }
         case NEvWrite::EModificationType::Replace:
         case NEvWrite::EModificationType::Delete: {
-            std::shared_ptr<NConveyor::ITask> task =
-                std::make_shared<NOlap::TBuildSlicesTask>(BufferActorId, std::move(WriteData), batch, Context);
-            NConveyor::TInsertServiceOperator::AsyncTaskToExecute(task);
+            if (AppDataVerified().ColumnShardConfig.GetWritingBufferDurationSeconds()) {
+                NActors::TActorContext::AsActorContext().Send(
+                    BufferActorId, std::make_unique<TEvAddInsertedDataToBuffer>(std::move(WriteData), batch, Context));
+            } else {
+                auto task = std::make_shared<NOlap::TBuildSlicesTask>(BufferActorId, std::move(WriteData), batch, Context);
+                NConveyor::TInsertServiceOperator::AsyncTaskToExecute(task);
+            }
             return TConclusionStatus::Success();
         }
     }

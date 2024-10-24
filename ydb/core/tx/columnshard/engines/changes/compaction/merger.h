@@ -11,25 +11,28 @@ namespace NKikimr::NOlap::NCompaction {
 class TMerger {
 private:
     YDB_ACCESSOR(bool, OptimizationWritingPackMode, false);
+    YDB_ACCESSOR(bool, InsertMode, false);
     YDB_ACCESSOR(ui64, PortionExpectedSize, 1.5 * (1 << 20));
+    YDB_READONLY_DEF(std::vector<std::shared_ptr<arrow::RecordBatch>>, PKIntervals);
     std::vector<std::shared_ptr<NArrow::TGeneralContainer>> Batches;
     std::vector<std::shared_ptr<NArrow::TColumnFilter>> Filters;
-    const TConstructionContext& Context;
+    const TMergerContext& Context;
     const TSaverContext& SaverContext;
 
 public:
+
     void AddBatch(const std::shared_ptr<NArrow::TGeneralContainer>& batch, const std::shared_ptr<NArrow::TColumnFilter>& filter) {
         AFL_VERIFY(batch);
         Batches.emplace_back(batch);
         Filters.emplace_back(filter);
     }
 
-    TMerger(const TConstructionContext& context, const TSaverContext& saverContext)
+    TMerger(const TMergerContext& context, const TSaverContext& saverContext)
         : Context(context)
         , SaverContext(saverContext) {
     }
 
-    TMerger(const TConstructionContext& context, const TSaverContext& saverContext,
+    TMerger(const TMergerContext& context, const TSaverContext& saverContext,
         std::vector<std::shared_ptr<NArrow::TGeneralContainer>>&& batches, std::vector<std::shared_ptr<NArrow::TColumnFilter>>&& filters)
         : Batches(std::move(batches))
         , Filters(std::move(filters))

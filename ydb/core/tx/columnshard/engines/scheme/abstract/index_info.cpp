@@ -24,8 +24,14 @@ void IIndexInfo::AddDeleteFlagsColumn(NArrow::TGeneralContainer& batch, const bo
 void IIndexInfo::AddSnapshotColumns(NArrow::TGeneralContainer& batch, const TSnapshot& snapshot, const ui64 insertWriteId) {
     const i64 numRows = batch.num_rows();
 
-    batch.AddField(PlanStepField, NArrow::MakeUI64Array(snapshot.GetPlanStep(), numRows)).Validate();
-    batch.AddField(TxIdField, NArrow::MakeUI64Array(snapshot.GetTxId(), numRows)).Validate();
+    if (snapshot.IsZero()) {
+        batch.AddField(PlanStepField, NArrow::TThreadSimpleArraysCache::Get(arrow::uint64(), std::make_shared<arrow::UInt64Scalar>(0), numRows)).Validate();
+        batch.AddField(TxIdField, NArrow::TThreadSimpleArraysCache::Get(arrow::uint64(), std::make_shared<arrow::UInt64Scalar>(0), numRows))
+            .Validate();
+    } else {
+        batch.AddField(PlanStepField, NArrow::MakeUI64Array(snapshot.GetPlanStep(), numRows)).Validate();
+        batch.AddField(TxIdField, NArrow::MakeUI64Array(snapshot.GetTxId(), numRows)).Validate();
+    }
     batch.AddField(WriteIdField, NArrow::MakeUI64Array(insertWriteId, numRows)).Validate();
 }
 
