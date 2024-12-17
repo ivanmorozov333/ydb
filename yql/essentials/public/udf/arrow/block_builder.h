@@ -79,7 +79,7 @@ public:
 
     struct TParams {
         size_t* TotalAllocated = nullptr;
-        TMaybe<ui8> MinFillPercentage; // if an internal buffer size is smaller than % of capacity, then shrink the buffer.
+        TMaybe<ui8> MinFillPercentage = 100; // if an internal buffer size is smaller than % of capacity, then shrink the buffer.
     };
 
     TArrayBuilderBase(const ITypeInfoHelper& typeInfoHelper, std::shared_ptr<arrow::DataType> arrowType, arrow::MemoryPool& pool, size_t maxLen, const TParams& params)
