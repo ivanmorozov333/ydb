@@ -77,6 +77,32 @@ message TProgram {
         YQL_KERNEL = 2;
     }
 
+    message TYQLKernel {
+        message TGetJsonValue {
+            optional string JsonPath = 1;
+        }
+        message TGetJsonValueCheck {
+            optional string JsonPath = 1;
+            optional string Value = 2;
+        }
+        message TIsJsonExists {
+            optional string JsonPath = 1;
+        }
+        message TRegexUsage {
+            optional string Regex = 1;
+        }
+        message TEqualCheck {
+            optional string Value = 1;
+        }
+        oneof Implementation {
+            TGetJsonValue GetJsonValue = 1;
+            TIsJsonExists IsJsonExists = 2;
+            TRegexUsage RegexUsage = 3;
+            TEqualCheck EqualCheck = 4;
+            TGetJsonValueCheck GetJsonValueCheck = 5;
+        }
+    }
+
     message TAssignment {
         enum EFunction {
             FUNC_UNSPECIFIED = 0;
