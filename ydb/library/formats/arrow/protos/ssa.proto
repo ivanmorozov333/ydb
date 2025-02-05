@@ -151,6 +151,7 @@ message TProgram {
             optional EFunctionType FunctionType = 3 [ default = SIMPLE_ARROW ];
             optional uint32 KernelIdx = 4;
             optional uint32 YqlOperationId = 5; // TKernelRequestBuilder::EBinaryOp
+            optional TYQLKernel KernelInfo;
         }
 
         message TExternalFunction {
