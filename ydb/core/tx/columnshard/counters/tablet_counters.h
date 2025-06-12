@@ -86,12 +86,6 @@ public:
         IncCounter(NColumnShard::COUNTER_READ_INDEX_BYTES, countersDelta.Bytes);
     }
 
-    void OnWriteCommitted(const NOlap::TInsertionSummary::TCounters& countersDelta) const {
-        IncCounter(COUNTER_BLOBS_COMMITTED, countersDelta.Rows);
-        IncCounter(COUNTER_BYTES_COMMITTED, countersDelta.Bytes);
-        IncCounter(COUNTER_RAW_BYTES_COMMITTED, countersDelta.RawBytes);
-    }
-
     void OnCompactionWriteIndexCompleted(bool success, const ui64 blobsWritten, const ui64 bytesWritten) const {
         IncCounter(success ? NColumnShard::COUNTER_SPLIT_COMPACTION_SUCCESS : NColumnShard::COUNTER_SPLIT_COMPACTION_FAIL);
         IncCounter(NColumnShard::COUNTER_SPLIT_COMPACTION_BLOBS_WRITTEN, blobsWritten);

@@ -168,7 +168,6 @@ class TColumnShard: public TActor<TColumnShard>, public NTabletFlatExecutor::TTa
     friend class TTxProposeTransaction;
     friend class TTxNotifyTxCompletion;
     friend class TTxPlanStep;
-    friend class TTxWrite;
     friend class TTxBlobsWritingFinished;
     friend class TTxBlobsWritingFailed;
     friend class TTxReadBase;
