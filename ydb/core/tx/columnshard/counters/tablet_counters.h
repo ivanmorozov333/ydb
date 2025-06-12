@@ -5,7 +5,6 @@
 #include <ydb/core/protos/counters_columnshard.pb.h>
 #include <ydb/core/protos/counters_datashard.pb.h>
 #include <ydb/core/tx/columnshard/engines/column_engine.h>
-#include <ydb/core/tx/columnshard/engines/insert_table/rt_insertion.h>
 
 namespace NKikimr::NColumnShard {
 

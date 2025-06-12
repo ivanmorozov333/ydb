@@ -11,7 +11,6 @@
 #include <ydb/core/tx/columnshard/engines/changes/indexation.h>
 #include <ydb/core/tx/columnshard/engines/changes/ttl.h>
 #include <ydb/core/tx/columnshard/engines/column_engine_logs.h>
-#include <ydb/core/tx/columnshard/engines/insert_table/insert_table.h>
 #include <ydb/core/tx/columnshard/engines/portions/write_with_blobs.h>
 #include <ydb/core/tx/columnshard/engines/predicate/predicate.h>
 #include <ydb/core/tx/columnshard/hooks/testing/controller.h>
@@ -85,22 +84,6 @@ public:
 
     void EraseAborted(const TInsertedData& data) override {
         Aborted.erase(data.GetInsertWriteId());
-    }
-
-    bool Load(TInsertTableAccessor& accessor, const TInstant&) override {
-        for (auto&& i : Inserted) {
-            accessor.AddInserted(std::move(i.second), true);
-        }
-        for (auto&& i : Aborted) {
-            accessor.AddAborted(std::move(i.second), true);
-        }
-        for (auto&& i : Committed) {
-            for (auto&& c : i.second) {
-                auto copy = c;
-                accessor.AddCommitted(std::move(copy), true);
-            }
-        }
-        return true;
     }
 
     virtual void WritePortion(const NOlap::TPortionInfo& portion) override {

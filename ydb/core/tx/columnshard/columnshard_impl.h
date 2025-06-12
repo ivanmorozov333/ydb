@@ -113,7 +113,6 @@ class TInsertTableInitializer;
 class TTxControllerInitializer;
 class TOperationsManagerInitializer;
 class TStoragesManagerInitializer;
-class TLongTxInitializer;
 class TDBLocksInitializer;
 class TBackgroundSessionsInitializer;
 class TSharingSessionsInitializer;
@@ -222,7 +221,6 @@ class TColumnShard: public TActor<TColumnShard>, public NTabletFlatExecutor::TTa
     friend class TWriteOperation;
 
     friend class TSchemaTransactionOperator;
-    friend class TLongTxTransactionOperator;
     friend class TEvWriteTransactionOperator;
     friend class TBackupTransactionOperator;
     friend class IProposeTxOperator;
@@ -232,7 +230,6 @@ class TColumnShard: public TActor<TColumnShard>, public NTabletFlatExecutor::TTa
     friend class NLoading::TTxControllerInitializer;
     friend class NLoading::TOperationsManagerInitializer;
     friend class NLoading::TStoragesManagerInitializer;
-    friend class NLoading::TLongTxInitializer;
     friend class NLoading::TDBLocksInitializer;
     friend class NLoading::TBackgroundSessionsInitializer;
     friend class NLoading::TSharingSessionsInitializer;
@@ -490,14 +487,6 @@ private:
     std::optional<TMonotonic> StartInstant;
     bool IsTxInitFinished = false;
 
-    struct TLongTxWriteInfo {
-        TInsertWriteId InsertWriteId;
-        ui32 WritePartId;
-        NLongTxService::TLongTxId LongTxId;
-        ui64 PreparedTxId = 0;
-        std::optional<ui32> GranuleShardingVersionId;
-    };
-
     ui64 CurrentSchemeShardId = 0;
     TMessageSeqNo LastSchemaSeqNo;
     std::optional<NKikimrSubDomains::TProcessingParams> ProcessingParams;
@@ -539,9 +528,6 @@ private:
 
     std::optional<ui64> ProgressTxInFlight;
     THashMap<ui64, TInstant> ScanTxInFlight;
-    THashMap<TInsertWriteId, TLongTxWriteInfo> LongTxWrites;
-    using TPartsForLTXShard = THashMap<ui32, TLongTxWriteInfo*>;
-    THashMap<TULID, TPartsForLTXShard> LongTxWritesByUniqueId;
     TMultiMap<NOlap::TSnapshot, TEvDataShard::TEvKqpScan::TPtr> WaitingScans;
     TBackgroundController BackgroundController;
     TSettings Settings;
@@ -553,7 +539,6 @@ private:
 
     void TryRegisterMediatorTimeCast();
     void UnregisterMediatorTimeCast();
-    void TryAbortWrites(NIceDb::TNiceDb& db, NOlap::TDbWrapper& dbTable, THashSet<TInsertWriteId>&& writesToAbort);
 
     bool WaitPlanStep(ui64 step);
     void SendWaitPlanStep(ui64 step);
@@ -565,14 +550,6 @@ private:
         ui64 mediatorTime = MediatorTimeCastEntry ? MediatorTimeCastEntry->Get(TabletID()) : 0;
         return ProgressTxController->GetTxCompleteLag(mediatorTime);
     }
-
-    TInsertWriteId HasLongTxWrite(const NLongTxService::TLongTxId& longTxId, const ui32 partId) const;
-    TInsertWriteId GetLongTxWrite(
-        NIceDb::TNiceDb& db, const NLongTxService::TLongTxId& longTxId, const ui32 partId, const std::optional<ui32> granuleShardingVersionId);
-    void AddLongTxWrite(const TInsertWriteId writeId, ui64 txId);
-    void LoadLongTxWrite(const TInsertWriteId writeId, const ui32 writePartId, const NLongTxService::TLongTxId& longTxId,
-        const std::optional<ui32> granuleShardingVersion);
-    bool RemoveLongTxWrite(NIceDb::TNiceDb& db, const TInsertWriteId writeId, const ui64 txId);
 
     void EnqueueBackgroundActivities(const bool periodic = false);
     virtual void Enqueue(STFUNC_SIG) override;
@@ -624,9 +601,6 @@ public:
         return TablesManager;
     }
 
-    bool HasLongTxWrites(const TInsertWriteId insertWriteId) const {
-        return LongTxWrites.contains(insertWriteId);
-    }
     void EnqueueProgressTx(const TActorContext& ctx, const std::optional<ui64> continueTxId);
     NOlap::TSnapshot GetLastTxSnapshot() const {
         return NOlap::TSnapshot(LastPlannedStep, LastPlannedTxId);
