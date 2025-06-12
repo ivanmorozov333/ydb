@@ -99,7 +99,6 @@ class TArrowData;
 class TEvWriteCommitPrimaryTransactionOperator;
 class TEvWriteCommitSecondaryTransactionOperator;
 class TTxFinishAsyncTransaction;
-class TTxInsertTableCleanup;
 class TTxRemoveSharedBlobs;
 class TOperationsManager;
 class TWaitEraseTablesTxSubscriber;
@@ -109,7 +108,6 @@ class TWriteTasksQueue;
 class TWriteTask;
 
 namespace NLoading {
-class TInsertTableInitializer;
 class TTxControllerInitializer;
 class TOperationsManagerInitializer;
 class TStoragesManagerInitializer;
@@ -161,7 +159,6 @@ using TTransactionBase = NTabletFlatExecutor::TTransactionBase<T>;
 class TColumnShard: public TActor<TColumnShard>, public NTabletFlatExecutor::TTabletExecutedFlat {
     friend class TEvWriteCommitSecondaryTransactionOperator;
     friend class TEvWriteCommitPrimaryTransactionOperator;
-    friend class TTxInsertTableCleanup;
     friend class TTxInit;
     friend class TTxInitSchema;
     friend class TTxUpdateSchema;
@@ -225,7 +222,6 @@ class TColumnShard: public TActor<TColumnShard>, public NTabletFlatExecutor::TTa
     friend class IProposeTxOperator;
     friend class TSharingTransactionOperator;
 
-    friend class NLoading::TInsertTableInitializer;
     friend class NLoading::TTxControllerInitializer;
     friend class NLoading::TOperationsManagerInitializer;
     friend class NLoading::TStoragesManagerInitializer;
@@ -520,7 +516,6 @@ private:
     std::shared_ptr<NSubscriber::TManager> Subscribers;
     std::shared_ptr<TTiersManager> Tiers;
     std::unique_ptr<NTabletPipe::IClientCache> PipeClientCache;
-    std::unique_ptr<NOlap::TInsertTable> InsertTable;
     NOlap::NResourceBroker::NSubscribe::TTaskContext InsertTaskSubscription;
     NOlap::NResourceBroker::NSubscribe::TTaskContext CompactTaskSubscription;
     NOlap::NResourceBroker::NSubscribe::TTaskContext TTLTaskSubscription;
@@ -577,10 +572,8 @@ private:
     bool SetupTtl();
     void SetupCleanupPortions();
     void SetupCleanupTables();
-    void SetupCleanupInsertTable();
     void SetupGC();
 
-    void UpdateInsertTableCounters();
     void UpdateIndexCounters();
     void UpdateResourceMetrics(const TActorContext& ctx, const TUsage& usage);
     ui64 MemoryUsage() const;
@@ -661,11 +654,6 @@ public:
     const std::shared_ptr<NOlap::NDataLocks::TManager>& GetDataLocksManager() const {
         AFL_VERIFY(DataLocksManager);
         return DataLocksManager;
-    }
-
-    const NOlap::TInsertTable& GetInsertTable() const {
-        AFL_VERIFY(!!InsertTable);
-        return *InsertTable;
     }
 
     static constexpr NKikimrServices::TActivity::EType ActorActivityType() {

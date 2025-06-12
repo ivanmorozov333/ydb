@@ -226,60 +226,6 @@ struct TEvPrivate {
     struct TEvPingSnapshotsUsage: public TEventLocal<TEvPingSnapshotsUsage, EvPingSnapshotsUsage> {
         TEvPingSnapshotsUsage() = default;
     };
-
-    class TEvWriteBlobsResult: public TEventLocal<TEvWriteBlobsResult, EvWriteBlobsResult> {
-    public:
-        enum EErrorClass {
-            Internal,
-            Request,
-            ConstraintViolation
-        };
-
-    private:
-        NColumnShard::TBlobPutResult::TPtr PutResult;
-        NOlap::TWritingBuffer WritesBuffer;
-        YDB_READONLY_DEF(TString, ErrorMessage);
-        YDB_ACCESSOR(EErrorClass, ErrorClass, EErrorClass::Internal);
-
-    public:
-        NKikimrDataEvents::TEvWriteResult::EStatus GetWriteResultStatus() const {
-            switch (ErrorClass) {
-                case EErrorClass::Internal:
-                    return NKikimrDataEvents::TEvWriteResult::STATUS_INTERNAL_ERROR;
-                case EErrorClass::Request:
-                    return NKikimrDataEvents::TEvWriteResult::STATUS_BAD_REQUEST;
-                case EErrorClass::ConstraintViolation:
-                    return NKikimrDataEvents::TEvWriteResult::STATUS_CONSTRAINT_VIOLATION;
-            }
-        }
-
-        static std::unique_ptr<TEvWriteBlobsResult> Error(
-            const NKikimrProto::EReplyStatus status, NOlap::TWritingBuffer&& writesBuffer, const TString& error, const EErrorClass errorClass) {
-            std::unique_ptr<TEvWriteBlobsResult> result =
-                std::make_unique<TEvWriteBlobsResult>(std::make_shared<NColumnShard::TBlobPutResult>(status), std::move(writesBuffer));
-            result->ErrorMessage = error;
-            result->ErrorClass = errorClass;
-            return result;
-        }
-
-        TEvWriteBlobsResult(const NColumnShard::TBlobPutResult::TPtr& putResult, NOlap::TWritingBuffer&& writesBuffer)
-            : PutResult(putResult)
-            , WritesBuffer(std::move(writesBuffer)) {
-            Y_ABORT_UNLESS(PutResult);
-        }
-
-        const NColumnShard::TBlobPutResult& GetPutResult() const {
-            return *PutResult;
-        }
-
-        const NOlap::TWritingBuffer& GetWritesBuffer() const {
-            return WritesBuffer;
-        }
-
-        NOlap::TWritingBuffer& MutableWritesBuffer() {
-            return WritesBuffer;
-        }
-    };
 };
 
 }   // namespace NKikimr::NColumnShard
