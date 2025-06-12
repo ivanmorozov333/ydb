@@ -28,7 +28,6 @@
 #include "engines/changes/cleanup_portions.h"
 #include "engines/changes/cleanup_tables.h"
 #include "engines/changes/general_compaction.h"
-#include "engines/changes/indexation.h"
 #include "engines/changes/ttl.h"
 #include "hooks/abstract/abstract.h"
 #include "resource_subscriber/counters.h"
