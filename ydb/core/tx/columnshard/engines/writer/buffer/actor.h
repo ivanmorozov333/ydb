@@ -1,7 +1,6 @@
 #pragma once
 #include "events.h"
 #include <ydb/library/actors/core/actor_bootstrapped.h>
-#include <ydb/core/tx/columnshard/engines/writer/indexed_blob_constructor.h>
 
 namespace NKikimr::NColumnShard::NWriting {
 

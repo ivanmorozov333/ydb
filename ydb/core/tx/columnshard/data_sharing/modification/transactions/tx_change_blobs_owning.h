@@ -1,6 +1,5 @@
 #pragma once
 #include <ydb/core/tx/columnshard/columnshard_impl.h>
-#include <ydb/core/tx/columnshard/engines/writer/indexed_blob_constructor.h>
 #include <ydb/core/tx/columnshard/tablet/ext_tx_base.h>
 
 namespace NKikimr::NOlap::NDataSharing {

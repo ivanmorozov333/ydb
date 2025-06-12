@@ -7,7 +7,6 @@
 #include <ydb/core/tx/columnshard/engines/portions/write_with_blobs.h>
 #include <ydb/core/tx/columnshard/engines/scheme/index_info.h>
 #include <ydb/core/tx/columnshard/engines/writer/buffer/events.h>
-#include <ydb/core/tx/columnshard/engines/writer/indexed_blob_constructor.h>
 
 namespace NKikimr::NOlap {
 
